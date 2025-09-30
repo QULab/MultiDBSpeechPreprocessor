@@ -1,0 +1,11 @@
+[general]
+do_overwrite = true
+
+[path]
+path_to_data_dir = "../orig_data"
+
+[segmentation]
+duration_min = 4  # in seconds
+duration_max = 12 
+ignore_too_short = true
+pause_threshold = 3  # in seconds
