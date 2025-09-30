@@ -1,0 +1,3 @@
+#!/bin/sh
+
+docker run --rm -ti --runtime=nvidia --gpus all -u $(id -u):$(id -g) -v /home/robert/resonanz:/resonanz -w /resonanz/main resonanz:latest
