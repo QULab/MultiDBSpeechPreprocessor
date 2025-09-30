@@ -14,11 +14,11 @@ def bhattacharyya(a, b):
     return -np.log(np.sum(np.sqrt(a * b)))
 
 
-do_plot = False
+do_plot = True
 
-# fixed random seed
-random_seed = 17
-#random_seed = None
+# random seed (for selecting segments for test group)
+random_seed = 17  # fixed seed
+#random_seed = None  # uncomment to use a seed
 rng = np.random.default_rng(seed=random_seed)
 
 ###############################################################################
@@ -42,9 +42,8 @@ score_min = min(possible_scores)
 score_max = max(possible_scores)
 score_bin_edges = np.arange(score_min, score_max + 2)
 
-
-scores = pd.Series([t[1] for t, _ in db.groupby(["global_pid", "phq-9"])], index=speakers)
-sexes = pd.Series([t[1] for t, _ in db.groupby(["global_pid", "sex"])], index=speakers)
+scores = pd.Series([db[db["global_pid"] == s]["phq-9"].iloc[0] for s in speakers], index=speakers)
+sexes = pd.Series([db[db["global_pid"] == s]["sex"].iloc[0] for s in speakers], index=speakers)
 
 # speaker_info = pd.DataFrame({"score": scores, "segments": segments}, index=speakers)
 
@@ -114,11 +113,11 @@ for p in possible_scores:
        prob += (score_in_train / train_fraction - score_in_val / (1 - train_fraction) <= diff[p], f"upper_deviation_{p}")
        prob += (score_in_val / (1 - train_fraction) - score_in_train / train_fraction <= diff[p], f"lower_deviation_{p}")
        
-       prob += (score_in_train - n_segments_train_desired_ps <= diff[p], f"upper_deviation_train_{p}")
-       prob += (n_segments_train_desired_ps - score_in_train <= diff[p], f"lower_deviation_train_{p}")
+       prob += ((score_in_train - n_segments_train_desired_ps) / train_fraction <= diff[p], f"upper_deviation_train_{p}")
+       prob += ((n_segments_train_desired_ps - score_in_train) / train_fraction <= diff[p], f"lower_deviation_train_{p}")
        
-       prob += (score_in_val - n_segments_val_desired_ps <= diff[p], f"upper_deviation_val_{p}")
-       prob += (n_segments_val_desired_ps - score_in_val <= diff[p], f"lower_deviation_val_{p}")
+       prob += ((score_in_val - n_segments_val_desired_ps) / (1 - train_fraction) <= diff[p], f"upper_deviation_val_{p}")
+       prob += ((n_segments_val_desired_ps - score_in_val) / (1 - train_fraction) <= diff[p], f"lower_deviation_val_{p}")
        
    except KeyError:
        print(f"No speakers have a PHQ-9 score of {p}")
@@ -133,12 +132,6 @@ for p in possible_sexes:
        # define deviation between train and val for each score
        prob += (n_sex_in_train / train_fraction - n_sex_in_val / (1 - train_fraction) <= diffs[p], f"upper_deviation_sex_{p}")
        prob += (n_sex_in_val / (1 - train_fraction) - n_sex_in_train / train_fraction <= diffs[p], f"lower_deviation_sex_{p}")
-       
-       #prob += (score_in_train - n_segments_train_desired_ps <= diff[p], f"upper_deviation_train_{p}")
-       #prob += (n_segments_train_desired_ps - score_in_train <= diff[p], f"lower_deviation_train_{p}")
-       
-       #prob += (score_in_val - n_segments_val_desired_ps <= diff[p], f"upper_deviation_val_{p}")
-       #prob += (n_segments_val_desired_ps - score_in_val <= diff[p], f"lower_deviation_val_{p}")
        
    except KeyError:
        print(f"No speakers have a PHQ-9 score of {p}")
